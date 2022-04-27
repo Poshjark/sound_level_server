@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.0)
+
+project(sound_level_server)
+
+find_package(Boost 1.78.0)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+
+set(SOURCE_EXE testServer.cpp)
+
+set(SOURCE_LIB volume_handler.cpp volume_handler.h)
+
+add_library(volume_handler ${SOURCE_LIB})
+
+add_executable(main ${SOURCE_EXE})
+
+target_link_libraries(main volume_handler ${Boost_LIBRARIES})

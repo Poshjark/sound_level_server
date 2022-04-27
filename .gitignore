@@ -3,3 +3,6 @@ CMakeCache.txt
 *.vcxproj*
 *.sln
 cmake_install.cmake
+Debug
+*.dir
+x64

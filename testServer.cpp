@@ -3,6 +3,8 @@
 #include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "volume_handler.h"
+#include "command_handler.h"
+
 
 #define SERVER_IP_V4 "127.0.0.1"
 #define SERVER_PORT 88
@@ -76,31 +78,8 @@ public:
                 command[i] = my_data_message[i];
             }
             std::cout << "Command received: " << command << std::endl;
-            if (command == "vsu") {
-                volume_handler->volume_step_up();
-            }
-            else if (command == "vsd") {
-                volume_handler->volume_step_down();
-            }
-            else if (command == "vsm") {
-                volume_handler->mute();
-            }
-            else if (command == "vsl") {
-                try{
-                    std::string new_sound_level_str("   ");
-                    for (size_t i = 3, j = 0; i < 7 && std::isdigit(my_data_message[i]); i++, j++) {
-                        new_sound_level_str[j] = my_data_message[i];
-                    }
-                    int new_sound_level_int = std::stoi(new_sound_level_str);
-                    std::clog << "New sound level to set: " << new_sound_level_int << std::endl;
-                    volume_handler->set_volume(new_sound_level_int);
-                }
-                catch (std::exception error) {
-                    std::cerr << "error: " << error.what() << std::endl;
-                    sock.close();
-                }
-                    
-            }
+            CommandHandler::execute_command(command);
+            
         }
         else {
             std::cerr << "error: " << err.message() << std::endl;
@@ -139,7 +118,8 @@ private:
 public:
     //constructor for accepting connection from client
     Server(boost::asio::io_service& io_service) :
-        acceptor_(io_service, tcp::endpoint(boost::asio::ip::address::from_string(SERVER_IP_V4), SERVER_PORT)){
+        acceptor_(io_service,
+            tcp::endpoint(boost::asio::ip::address::from_string(SERVER_IP_V4), SERVER_PORT)){
         this->volume_handler = new VolumeHandler();
         start_accept();
     }

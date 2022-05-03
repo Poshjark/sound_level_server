@@ -9,10 +9,14 @@ set(SOURCE_EXE testServer.cpp)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-set(SOURCE_LIB volume_handler.cpp volume_handler.h)
+set(VOULME_HANDLER_SOURCE_LIB volume_handler.cpp volume_handler.h)
 
-add_library(volume_handler ${SOURCE_LIB})
+add_library(volume_handler ${VOULME_HANDLER_SOURCE_LIB})
+
+set(COMMAND_HANDLER_SOURCE_LIB command_handler.cpp command_handler.h)
+
+add_library(command_handler ${COMMAND_HANDLER_SOURCE_LIB})
 
 add_executable(main ${SOURCE_EXE})
 
-target_link_libraries(main volume_handler ${Boost_LIBRARIES})
+target_link_libraries(main volume_handler command_handler ${Boost_LIBRARIES})

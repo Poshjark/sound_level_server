@@ -39,6 +39,9 @@ int main() {
 			std::cout << "Message is too large, it will be trimmed to max message size " << MESSAGE_MAX_LENGTH << " characters\n";
 			msg = msg.substr(0, MESSAGE_MAX_LENGTH);
 		}
+		while (msg.size() < 6) {
+			msg += ' ';
+		}
 		socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(SERVER_IP_V4), SERVER_PORT));
 		boost::asio::write(socket, boost::asio::buffer(msg), error);
 		if (!error) {

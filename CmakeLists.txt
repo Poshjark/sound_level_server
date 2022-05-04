@@ -17,6 +17,10 @@ set(COMMAND_HANDLER_SOURCE_LIB command_handler.cpp command_handler.h)
 
 add_library(command_handler ${COMMAND_HANDLER_SOURCE_LIB})
 
-add_executable(main ${SOURCE_EXE})
+add_executable(server ${SOURCE_EXE})
 
-target_link_libraries(main volume_handler command_handler ${Boost_LIBRARIES})
+target_link_libraries(server volume_handler command_handler ${Boost_LIBRARIES})
+
+add_executable(client clientTest.cpp)
+
+target_link_libraries(client ${BOOST_LIBRARIES})

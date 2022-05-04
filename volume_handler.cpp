@@ -40,12 +40,14 @@ VolumeHandler::VolumeHandler() : audio_device(nullptr), endpoint_volume_interfac
 	hr = endpoint_volume_interface->GetMasterVolumeLevel(&volume_level);
 	exit_on_error(hr);
 
-
+	// Initiliazing mute state
+	hr = endpoint_volume_interface->GetMute(&muted);
+	exit_on_error(hr);
 }
 
-float VolumeHandler::update_volume_value()
+const float& VolumeHandler::update_volume_value()
 {
-	hr = endpoint_volume_interface->GetMasterVolumeLevel(&volume_level);
+	hr = endpoint_volume_interface->GetMasterVolumeLevelScalar(&volume_level);
 	exit_on_error(hr);
 	return volume_level;
 }
@@ -70,15 +72,13 @@ float VolumeHandler::set_volume(int val) {
 	return update_volume_value();
 }
 
-void VolumeHandler::mute() {
-	hr = endpoint_volume_interface->SetMute(true, &g_guidMyContext);
+float VolumeHandler::mute() {
+	muted = !muted;
+	hr = endpoint_volume_interface->SetMute(muted, &g_guidMyContext);
 	exit_on_error(hr);
+	return update_volume_value();
 }
 
-void VolumeHandler::unmute() {
-	hr = endpoint_volume_interface->SetMute(false, &g_guidMyContext);
-	exit_on_error(hr);
-}
 
 
 

@@ -23,22 +23,22 @@ class VolumeHandler {
 #ifdef DEBUG
 public:
 #endif
-	BOOL muted;
+
 	std::string name;
 	HRESULT hr = S_OK;
 	IMMDevice* audio_device;
 	IAudioEndpointVolume* endpoint_volume_interface;
 	GUID g_guidMyContext;
 	float volume_level;
-	float update_volume_value();
+	const float& update_volume_value();
 	void get_name();
 public:
+	BOOL muted;
 	VolumeHandler();
 	float volume_step_up();
 	float volume_step_down();
 	float set_volume(int);
-	void mute();
-	void unmute();
+	float mute();
 
 	~VolumeHandler();
 

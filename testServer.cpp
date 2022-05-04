@@ -9,6 +9,7 @@
 #define SERVER_IP_V4 "127.0.0.1"
 #define SERVER_PORT 88
 #define MESSAGE_MAX_LENGTH 1024
+#define MESSAGE_LENGTH 6u
 #define COMMAND_LENGTH 3
 
 using namespace boost::asio;
@@ -54,37 +55,42 @@ public:
     void start()
     {
         sock.async_read_some(
-            boost::asio::buffer(my_data_message, max_length),
+            boost::asio::buffer(my_data_message, MESSAGE_LENGTH),
             boost::bind(&con_handler::handle_read,
                 shared_from_this(),
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+                boost::system::error_code(),
+                MESSAGE_LENGTH));
 
         sock.async_write_some(
             boost::asio::buffer(message, max_length),
             boost::bind(&con_handler::handle_write,
                 shared_from_this(),
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+                boost::system::error_code(),
+                max_length));
     }
 
     void handle_read(const boost::system::error_code& err, size_t bytes_transferred)
     {
+        
         if (!err) {
 
             //print_char_arr(my_data_message);
-            std::string command="000";
-            for (size_t i = 0; i < COMMAND_LENGTH; i++) {
-                command[i] = my_data_message[i];
+            
+            auto result = CommandHandler::execute_command(my_data_message, volume_handler, bytes_transferred);
+            if (!result) {
+                sock.close();
+                std::cerr << "Error occured " << result.what() << std::endl;
             }
-            std::cout << "Command received: " << command << std::endl;
-            CommandHandler::execute_command(command);
+            else {
+                std::clog << result.what() << std::endl;
+            }
             
         }
         else {
             std::cerr << "error: " << err.message() << std::endl;
             sock.close();
         }
+
     }
     void handle_write(const boost::system::error_code& err, size_t bytes_transferred)
     {

@@ -44,25 +44,14 @@ int main() {
 		}
 		socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(SERVER_IP_V4), SERVER_PORT));
 		boost::asio::write(socket, boost::asio::buffer(msg), error);
-		if (!error) {
-			cout << "Message sent"  << endl;
-			std::cout << "Was socket opened while sending? - " << socket.is_open() << std::endl;
-		}
-		else {
-			cout << "Error while sending: " << error.message() << endl;
-			std::cout << "Was socket opened while sending? - " << socket.is_open() << std::endl;
-		}
-
-
+		boost::system::error_code error;
 		boost::asio::read(socket, receive_buffer, boost::asio::transfer_all(), error);
+		const char* data = boost::asio::buffer_cast<const char*>(receive_buffer.data());
+		print_char_arr(data);
 		if (error && error != boost::asio::error::eof) {
 			cout << "receive failed " << error.message() << endl;
-			std::cout << "Is socket opened while failing receiving? - " <<  socket.is_open() << std::endl;
 		}
 		else {
-			const char* data = boost::asio::buffer_cast<const char*>(receive_buffer.data());
-			print_char_arr(data);
-			std::cout << "Is socket opened after receiving? - " << socket.is_open() << std::endl;
 		}
 		msg.clear();
 		socket.close();

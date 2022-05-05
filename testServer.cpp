@@ -54,36 +54,39 @@ public:
 
     void start()
     {
+        std::string response;
+        CommandHandler command_handler(volume_handler);
         sock.async_read_some(
             boost::asio::buffer(my_data_message, MESSAGE_LENGTH),
             boost::bind(&con_handler::handle_read,
                 shared_from_this(),
                 boost::system::error_code(),
-                MESSAGE_LENGTH));
+                MESSAGE_LENGTH, command_handler, response));
 
         sock.async_write_some(
-            boost::asio::buffer(message, max_length),
+            boost::asio::buffer(response),
             boost::bind(&con_handler::handle_write,
                 shared_from_this(),
                 boost::system::error_code(),
-                max_length));
+                MESSAGE_LENGTH, response));
     }
 
-    void handle_read(const boost::system::error_code& err, size_t bytes_transferred)
+    void handle_read(const boost::system::error_code& err, size_t bytes_transferred, CommandHandler& command_handler
+        , std::string& response)
     {
+        std::cout << "Response to client: " << response << std::endl;
         
         if (!err) {
 
             //print_char_arr(my_data_message);
             
-            auto result = CommandHandler::execute_command(my_data_message, volume_handler, bytes_transferred);
+            auto result = command_handler.execute_command(my_data_message, bytes_transferred);
+            response = result.what();
             if (!result) {
                 sock.close();
                 std::cerr << "Error occured " << result.what() << std::endl;
             }
-            else {
-                std::clog << result.what() << std::endl;
-            }
+            
             
         }
         else {
@@ -92,10 +95,13 @@ public:
         }
 
     }
-    void handle_write(const boost::system::error_code& err, size_t bytes_transferred)
+    void handle_write(const boost::system::error_code& err, size_t bytes_transferred,
+        const std::string& response)
     {
         if (!err) {
-            //cout << "Server sent Hello message!" << endl;
+
+            sock.write_some(boost::asio::buffer(response));
+            sock.close();
         }
         else {
             std::cerr << "error: " << err.message() << endl;

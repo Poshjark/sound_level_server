@@ -60,7 +60,7 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
     if (volume_level_str.size() < 3) {
         volume_level_str = std::string(3 - volume_level_str.size(), '0') + volume_level_str;
     }
-    result_message += std::to_string(volume_level);
+    result_message += volume_level_str;
     result_message += muted[0];
 	return ch_result_t(result_message,true);
 }

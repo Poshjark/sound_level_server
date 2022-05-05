@@ -26,6 +26,7 @@ int main() {
 	tcp::socket socket(io_service);
 	
 	string msg = "Default message\n";
+	std::string response;
 	boost::system::error_code error;
 	boost::asio::streambuf receive_buffer;
 	std::cout << std::boolalpha;
@@ -43,9 +44,8 @@ int main() {
 			msg += ' ';
 		}
 		socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(SERVER_IP_V4), SERVER_PORT));
-		boost::asio::write(socket, boost::asio::buffer(msg), error);
-		boost::system::error_code error;
-		boost::asio::read(socket, receive_buffer, boost::asio::transfer_all(), error);
+		boost::asio::write(socket, boost::asio::buffer(msg,6), error);
+		boost::asio::read(socket, boost::asio::buffer(response,6));
 		const char* data = boost::asio::buffer_cast<const char*>(receive_buffer.data());
 		print_char_arr(data);
 		if (error && error != boost::asio::error::eof) {

@@ -33,14 +33,16 @@ class con_handler : public boost::enable_shared_from_this<con_handler>
 {
 private:
     tcp::socket sock;
-    std::string message = "";
+    const char* response;
     enum { max_length = MESSAGE_MAX_LENGTH };
-    char my_data_message[max_length];
+    char receive_buffer[max_length];
     VolumeHandler* volume_handler;
+    CommandHandler command_handler;
 public:
     typedef boost::shared_ptr<con_handler> pointer;
     con_handler(boost::asio::any_io_executor& io_service, VolumeHandler* volume_handler_input) 
-        : sock(io_service), volume_handler(volume_handler_input)  {}
+        : sock(io_service), volume_handler(volume_handler_input),
+        command_handler(CommandHandler(volume_handler_input)) {}
     // creating the pointer
     static pointer create(boost::asio::any_io_executor& io_service, VolumeHandler* volume_handler)
     {
@@ -54,34 +56,28 @@ public:
 
     void start()
     {
-        std::string response;
-        CommandHandler command_handler(volume_handler);
         sock.async_read_some(
-            boost::asio::buffer(my_data_message, MESSAGE_LENGTH),
+            boost::asio::buffer(receive_buffer, MESSAGE_LENGTH),
             boost::bind(&con_handler::handle_read,
                 shared_from_this(),
                 boost::system::error_code(),
-                MESSAGE_LENGTH, command_handler, response));
+                MESSAGE_LENGTH));
 
-        sock.async_write_some(
-            boost::asio::buffer(response),
-            boost::bind(&con_handler::handle_write,
-                shared_from_this(),
-                boost::system::error_code(),
-                MESSAGE_LENGTH, response));
+        
     }
 
-    void handle_read(const boost::system::error_code& err, size_t bytes_transferred, CommandHandler& command_handler
-        , std::string& response)
-    {
-        std::cout << "Response to client: " << response << std::endl;
-        
+    void handle_read(const boost::system::error_code& err, size_t bytes_transferred){
         if (!err) {
+            auto result = command_handler.execute_command(receive_buffer, bytes_transferred);
+            response = result.what().c_str();
+            std::cout << "Response for client: " << response << std::endl;
+            sock.async_write_some(
+                boost::asio::buffer(response,6),
+                boost::bind(&con_handler::handle_write,
+                    shared_from_this(),
+                    boost::system::error_code(),
+                    MESSAGE_LENGTH));
 
-            //print_char_arr(my_data_message);
-            
-            auto result = command_handler.execute_command(my_data_message, bytes_transferred);
-            response = result.what();
             if (!result) {
                 sock.close();
                 std::cerr << "Error occured " << result.what() << std::endl;
@@ -95,13 +91,9 @@ public:
         }
 
     }
-    void handle_write(const boost::system::error_code& err, size_t bytes_transferred,
-        const std::string& response)
+    void handle_write(const boost::system::error_code& err, size_t bytes_transferred)
     {
         if (!err) {
-
-            sock.write_some(boost::asio::buffer(response));
-            sock.close();
         }
         else {
             std::cerr << "error: " << err.message() << endl;

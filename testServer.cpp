@@ -33,7 +33,7 @@ class con_handler : public boost::enable_shared_from_this<con_handler>
 {
 private:
     tcp::socket sock;
-    const char* response;
+    std::string response;
     enum { max_length = MESSAGE_MAX_LENGTH };
     char receive_buffer[max_length];
     VolumeHandler* volume_handler;
@@ -69,10 +69,10 @@ public:
     void handle_read(const boost::system::error_code& err, size_t bytes_transferred){
         if (!err) {
             auto result = command_handler.execute_command(receive_buffer, bytes_transferred);
-            response = result.what().c_str();
+            response = result.what() + '\n';
             std::cout << "Response for client: " << response << std::endl;
             sock.async_write_some(
-                boost::asio::buffer(response,6),
+                boost::asio::buffer(response),
                 boost::bind(&con_handler::handle_write,
                     shared_from_this(),
                     boost::system::error_code(),
@@ -94,6 +94,7 @@ public:
     void handle_write(const boost::system::error_code& err, size_t bytes_transferred)
     {
         if (!err) {
+            std::cout << "Response is sent: " << response << std::endl;
         }
         else {
             std::cerr << "error: " << err.message() << endl;

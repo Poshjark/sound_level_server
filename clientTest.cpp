@@ -10,6 +10,7 @@ using std::endl;
 #define SERVER_IP_V4 "127.0.0.1"
 #define SERVER_PORT 88
 #define MESSAGE_MAX_LENGTH 1024
+#define MESSAGE_LENGTH 32
 
 void print_char_arr(const char* data) {
 	int i = 0;
@@ -21,14 +22,39 @@ void print_char_arr(const char* data) {
 }
 
 
+void send_message(std::string message) {
+	boost::asio::io_service ios;
+
+	boost::asio::ip::tcp::endpoint
+		endpoint(boost::asio::ip::address::from_string(SERVER_IP_V4), SERVER_PORT);
+	boost::asio::ip::tcp::socket socket(ios);
+	socket.connect(endpoint);
+
+	boost::system::error_code error;
+	socket.write_some(boost::asio::buffer(message), error);
+
+	std::string d_buf;
+	boost::asio::read_until(socket, boost::asio::dynamic_buffer(d_buf), '\n');
+
+	if (error == boost::asio::error::eof)
+	{
+		std::cout << "Connection closed by server\n";
+	}
+	else if (error)
+	{
+		std::cout << "ERROR in connection" << std::endl;
+		return;
+	}
+
+	std::cout << "Received: " << d_buf;
+
+}
+
 int main() {
-	boost::asio::io_service io_service;
-	tcp::socket socket(io_service);
+	
 	
 	string msg = "Default message\n";
-	boost::system::error_code error;
-	boost::asio::streambuf receive_buffer;
-	std::cout << std::boolalpha;
+	
 	while (true) {
 		std::cout << "Enter the message to send(exit to close client):\n" << std::endl;
 		std::cin >> msg;
@@ -42,30 +68,9 @@ int main() {
 		while (msg.size() < 6) {
 			msg += ' ';
 		}
-		socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(SERVER_IP_V4), SERVER_PORT));
-		boost::asio::write(socket, boost::asio::buffer(msg), error);
-		if (!error) {
-			cout << "Message sent"  << endl;
-			std::cout << "Was socket opened while sending? - " << socket.is_open() << std::endl;
-		}
-		else {
-			cout << "Error while sending: " << error.message() << endl;
-			std::cout << "Was socket opened while sending? - " << socket.is_open() << std::endl;
-		}
-
-
-		boost::asio::read(socket, receive_buffer, boost::asio::transfer_all(), error);
-		if (error && error != boost::asio::error::eof) {
-			cout << "receive failed " << error.message() << endl;
-			std::cout << "Is socket opened while failing receiving? - " <<  socket.is_open() << std::endl;
-		}
-		else {
-			const char* data = boost::asio::buffer_cast<const char*>(receive_buffer.data());
-			print_char_arr(data);
-			std::cout << "Is socket opened after receiving? - " << socket.is_open() << std::endl;
-		}
+		send_message(msg);
+		
 		msg.clear();
-		socket.close();
 	}
 	
 }

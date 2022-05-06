@@ -33,14 +33,16 @@ class con_handler : public boost::enable_shared_from_this<con_handler>
 {
 private:
     tcp::socket sock;
-    std::string message = "";
+    std::string response;
     enum { max_length = MESSAGE_MAX_LENGTH };
-    char my_data_message[max_length];
+    char receive_buffer[max_length];
     VolumeHandler* volume_handler;
+    CommandHandler command_handler;
 public:
     typedef boost::shared_ptr<con_handler> pointer;
     con_handler(boost::asio::any_io_executor& io_service, VolumeHandler* volume_handler_input) 
-        : sock(io_service), volume_handler(volume_handler_input)  {}
+        : sock(io_service), volume_handler(volume_handler_input),
+        command_handler(CommandHandler(volume_handler_input)) {}
     // creating the pointer
     static pointer create(boost::asio::any_io_executor& io_service, VolumeHandler* volume_handler)
     {
@@ -55,35 +57,32 @@ public:
     void start()
     {
         sock.async_read_some(
-            boost::asio::buffer(my_data_message, MESSAGE_LENGTH),
+            boost::asio::buffer(receive_buffer, MESSAGE_LENGTH),
             boost::bind(&con_handler::handle_read,
                 shared_from_this(),
                 boost::system::error_code(),
                 MESSAGE_LENGTH));
 
-        sock.async_write_some(
-            boost::asio::buffer(message, max_length),
-            boost::bind(&con_handler::handle_write,
-                shared_from_this(),
-                boost::system::error_code(),
-                max_length));
+        
     }
 
-    void handle_read(const boost::system::error_code& err, size_t bytes_transferred)
-    {
-        
+    void handle_read(const boost::system::error_code& err, size_t bytes_transferred){
         if (!err) {
+            auto result = command_handler.execute_command(receive_buffer, bytes_transferred);
+            response = result.what() + '\n';
+            std::cout << "Response for client: " << response << std::endl;
+            sock.async_write_some(
+                boost::asio::buffer(response),
+                boost::bind(&con_handler::handle_write,
+                    shared_from_this(),
+                    boost::system::error_code(),
+                    MESSAGE_LENGTH));
 
-            //print_char_arr(my_data_message);
-            
-            auto result = CommandHandler::execute_command(my_data_message, volume_handler, bytes_transferred);
             if (!result) {
                 sock.close();
                 std::cerr << "Error occured " << result.what() << std::endl;
             }
-            else {
-                std::clog << result.what() << std::endl;
-            }
+            
             
         }
         else {
@@ -95,7 +94,7 @@ public:
     void handle_write(const boost::system::error_code& err, size_t bytes_transferred)
     {
         if (!err) {
-            //cout << "Server sent Hello message!" << endl;
+            std::cout << "Response is sent: " << response << std::endl;
         }
         else {
             std::cerr << "error: " << err.message() << endl;

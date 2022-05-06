@@ -9,12 +9,16 @@ CommandHandler::CommandHandlerResult::CommandHandlerResult(std::string message, 
 {
 }
 
+CommandHandler::CommandHandler(VolumeHandler* _volume_handler) : volume_handler(_volume_handler) {
+
+}
+
 const std::string& CommandHandler::CommandHandlerResult::what()
 {
     return this->result_message;
 }
 
-CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_message[],VolumeHandler* volume_handler, size_t message_length) {
+CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_message[], size_t message_length) {
     typedef CommandHandler::CommandHandlerResult ch_result_t;
     float volume_level = 0;
     std::string command = "000";
@@ -23,13 +27,13 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
     }
     std::cout << "Command received: " << command << std::endl;
     if (command == "vsu") {
-        volume_level = volume_handler->volume_step_up();
+        volume_level = this->volume_handler->volume_step_up();
     }
     else if (command == "vsd") {
-        volume_level = volume_handler->volume_step_down();
+        volume_level = this->volume_handler->volume_step_down();
     }
     else if (command == "vsm") {
-        volume_level = volume_handler->mute();
+        volume_level = this->volume_handler->mute();
     }
     else if (command == "vsl") {
         try {
@@ -38,8 +42,8 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
                 new_sound_level_str += raw_message[i];
             }
             int new_sound_level_int = std::stoi(new_sound_level_str);
-            std::clog << "New sound level to set: " << new_sound_level_int << std::endl;
-            volume_level = volume_handler->set_volume(new_sound_level_int);
+            //std::clog << "New sound level to set: " << new_sound_level_int << std::endl;
+            volume_level = this->volume_handler->set_volume(new_sound_level_int);
         }
         catch (std::exception error) {
             return ch_result_t(error.what(),false);
@@ -47,15 +51,16 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
 
     }
     else if (command == "gvl") {
-        volume_level = volume_handler->update_volume_value();
+        volume_level = this->volume_handler->update_volume_value();
     }
-    std::string muted = volume_handler->muted ? "true" : "false";
-    std::string result_message = "Operation " 
-        + command 
-        +  " succeded. New volume level is " 
-        + std::to_string((int)(volume_level*100)) + ". Channel is muted - " 
-        + muted + "\n";
+    std::string muted = this->volume_handler->muted ? "true" : "false";
+    std::string result_message;
+    result_message += "t";
+    std::string volume_level_str = std::to_string((int)(volume_level * 100));
+    if (volume_level_str.size() < 3) {
+        volume_level_str = std::string(3 - volume_level_str.size(), '0') + volume_level_str;
+    }
+    result_message += volume_level_str;
+    result_message += muted[0];
 	return ch_result_t(result_message,true);
 }
-
-

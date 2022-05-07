@@ -1,4 +1,6 @@
 #include "command_handler.h"
+#include "media_commands_handler.h"
+
 #define MESSAGE_MAX_LENGTH 1024
 #define COMMAND_LENGTH 3
 #define SOUND_LEVEL_LENGTH 3
@@ -53,10 +55,22 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
     else if (command == "gvl") {
         volume_level = this->volume_handler->update_volume_value();
     }
+    else if (command == "mpp") {
+        MediaCommandsHandler::play_pause_media();
+    }
+    else if (command == "mnx"){
+        MediaCommandsHandler::next_media();
+    }
+    else if (command == "mpr"){
+        MediaCommandsHandler::prev_media(); // mpr
+    }
+    else{
+        
+    }
     std::string muted = this->volume_handler->muted ? "true" : "false";
     std::string result_message;
     result_message += "t";
-    std::string volume_level_str = std::to_string((int)(volume_level * 100));
+    std::string volume_level_str = std::to_string((int)(volume_level * 100 + 0.5));
     if (volume_level_str.size() < 3) {
         volume_level_str = std::string(3 - volume_level_str.size(), '0') + volume_level_str;
     }

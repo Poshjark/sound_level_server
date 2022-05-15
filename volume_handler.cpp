@@ -51,19 +51,19 @@ const float& VolumeHandler::update_volume_value()
 	exit_on_error(hr);
 	return volume_level;
 }
-float VolumeHandler::volume_step_up() {
+const float& VolumeHandler::volume_step_up() {
 	hr = endpoint_volume_interface->VolumeStepUp(&g_guidMyContext);
 	exit_on_error(hr);
 	return update_volume_value();
 }
 
-float VolumeHandler::volume_step_down() {
+const float& VolumeHandler::volume_step_down() {
 	hr = endpoint_volume_interface->VolumeStepDown(&g_guidMyContext);
 	exit_on_error(hr);
 	return update_volume_value();
 }
 
-float VolumeHandler::set_volume(int val) {
+const float& VolumeHandler::set_volume(int val) {
 	if (val >= 0 && val <= 100) {
 		float new_val = (float)val / 100.0f;
 		hr = endpoint_volume_interface->SetMasterVolumeLevelScalar(new_val, &g_guidMyContext);
@@ -72,7 +72,7 @@ float VolumeHandler::set_volume(int val) {
 	return update_volume_value();
 }
 
-float VolumeHandler::mute() {
+const float& VolumeHandler::mute() {
 	muted = !muted;
 	hr = endpoint_volume_interface->SetMute(muted, &g_guidMyContext);
 	exit_on_error(hr);

@@ -35,10 +35,10 @@ public:
 public:
 	BOOL muted;
 	VolumeHandler();
-	float volume_step_up();
-	float volume_step_down();
-	float set_volume(int);
-	float mute();
+	const float& volume_step_up();
+	const float& volume_step_down();
+	const float& set_volume(int);
+	const float& mute();
 
 	~VolumeHandler();
 

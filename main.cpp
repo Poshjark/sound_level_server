@@ -10,6 +10,9 @@ int main(int argc, char* argv[])
         std::cout << "Please specify ip which will be used by server: " << std::endl;
         std::cin >> ip;
     }
+    else{
+        ip = argv[1];
+    }
     try{
         std::cout << "IP is " << ip << std::endl;
         boost::asio::io_service io_service;

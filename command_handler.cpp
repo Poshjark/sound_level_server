@@ -22,11 +22,12 @@ const std::string& CommandHandler::CommandHandlerResult::what()
 
 CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_message[], size_t message_length) {
     typedef CommandHandler::CommandHandlerResult ch_result_t;
-    float volume_level = 0;
+    float volume_level = this->volume_handler->update_volume_value();
     std::string command = "000";
     for (size_t i = 0; i < COMMAND_LENGTH; i++) {
         command[i] = raw_message[i];
     }
+    
     std::cout << "Command received: " << command << std::endl;
     if (command == "vsu") {
         volume_level = this->volume_handler->volume_step_up();
@@ -53,7 +54,6 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
 
     }
     else if (command == "gvl") {
-        volume_level = this->volume_handler->update_volume_value();
     }
     else if (command == "mpp") {
         MediaCommandsHandler::play_pause_media();
@@ -62,11 +62,12 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
         MediaCommandsHandler::next_media();
     }
     else if (command == "mpr"){
-        MediaCommandsHandler::prev_media(); // mpr
+        MediaCommandsHandler::prev_media(); 
     }
     else{
         
     }
+
     std::string muted = this->volume_handler->muted ? "true" : "false";
     std::string result_message;
     result_message += "t";

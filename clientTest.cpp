@@ -7,7 +7,7 @@ using std::string;
 using std::cout;
 using std::endl;
 
-#define SERVER_IP_V4 "192.168.137.145"
+#define SERVER_IP_V4 "192.168.0.102"
 #define SERVER_PORT 3000
 
 #define MESSAGE_MAX_LENGTH 1024

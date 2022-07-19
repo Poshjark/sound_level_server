@@ -21,7 +21,7 @@ add_library(media_commands_handler media_commands_handler.cpp media_commands_han
 
 add_library(server_lib server.cpp server.h)
 
-add_executable(server ${SOURCE_EXE})
+add_executable(server ${SOURCE_EXE} sample.h)
 
 target_link_libraries(server server_lib volume_handler command_handler media_commands_handler ${Boost_LIBRARIES})
 

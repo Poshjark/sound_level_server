@@ -5,10 +5,13 @@
 #include <tchar.h>
 #include <strsafe.h>
 #include "sample.h"
+#include <regex>
 
 #pragma comment(lib, "advapi32.lib")
 
 #define SVCNAME TEXT("SvcName")
+#define ARGS_EXE_FLAG "-exe"
+#define DEFAULT_SERVER_IPv4 "192.168.0.102"
 
 SERVICE_STATUS          gSvcStatus;
 SERVICE_STATUS_HANDLE   gSvcStatusHandle;
@@ -22,6 +25,46 @@ VOID ReportSvcStatus(DWORD, DWORD, DWORD);
 VOID SvcInit(DWORD, LPTSTR*);
 VOID SvcReportEvent(LPTSTR);
 
+bool run_as_service = false;
+const std::regex ipv4("(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
+std::string SERVER_IP = DEFAULT_SERVER_IPv4;
+
+
+int main_executable_loop()
+{
+    try
+    {
+        std::cout << "Server is now running on ip '" << SERVER_IP << "'\n" << std::endl;
+        boost::asio::io_service io_service;
+        Server server(io_service, SERVER_IP);
+        io_service.run();
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    return 0;
+}
+
+
+void parse_main_args(int argc, TCHAR* argv[]) {
+    
+    for (DWORD index = 1; index < argc; index++)
+    {
+        if (lstrcmpi(argv[index], TEXT(ARGS_EXE_FLAG)) == 0)
+        {
+            run_as_service = false;
+        }
+        else if (std::regex_match(argv[index],ipv4))
+        {
+            SERVER_IP = argv[index];
+        }
+        else {
+            std::cerr << "Wrong args given. Specify ip-address for Server like '192.168.1.1'\n or/and\n '-exe' flag to run not as service but as executable" << std::endl;
+        }
+    }
+
+}
 
 //
 // Purpose: 
@@ -38,10 +81,11 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
     // If command-line parameter is "install", install the service. 
     // Otherwise, the service is probably being started by the SCM.
 
-    if (lstrcmpi(argv[1], TEXT("install")) == 0)
+    parse_main_args(argc, argv);
+
+    if (!run_as_service) 
     {
-        SvcInstall();
-        return 0;
+        main_executable_loop();
     }
 
     // TO_DO: Add any additional services for the process to this table.
@@ -215,24 +259,7 @@ VOID SvcInit(DWORD dwArgc, LPTSTR* lpszArgv)
 
     while (1)
     {
-
-        std::string ip = "192.168.0.102";
-        if (dwArgc < 2) {
-            std::cout << "Please specify ip which will be used by server: " << std::endl;
-            std::cin >> ip;
-        }
-        else {
-            ip = lpszArgv[1];
-        }
-        try {
-            std::cout << "IP is " << ip << std::endl;
-            boost::asio::io_service io_service;
-            Server server(io_service, ip);
-            io_service.run();
-        }
-        catch (std::exception& e) {
-            std::cerr << e.what() << std::endl;
-        }
+        main_executable_loop();
 
         WaitForSingleObject(ghSvcStopEvent, INFINITE);
 
@@ -356,3 +383,5 @@ VOID SvcReportEvent(LPTSTR szFunction)
         DeregisterEventSource(hEventSource);
     }
 }
+
+

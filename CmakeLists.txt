@@ -3,28 +3,15 @@ cmake_minimum_required(VERSION 3.0)
 project(sound_level_server LANGUAGES CXX)
 
 find_package(Boost 1.78.0)
+
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
-set(SOURCE_EXE main.cpp)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_LIST_DIR}/bin)
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib)
 
-set(VOULME_HANDLER_SOURCE_LIB volume_handler.cpp volume_handler.h)
+set(PROJECT_BINARY_DIR ${CMAKE_CURRENT_LIST_DIR}/bin)
 
-add_library(volume_handler ${VOULME_HANDLER_SOURCE_LIB})
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
-set(COMMAND_HANDLER_SOURCE_LIB command_handler.cpp command_handler.h)
-
-add_library(command_handler ${COMMAND_HANDLER_SOURCE_LIB})
-
-add_library(media_commands_handler media_commands_handler.cpp media_commands_handler.h)
-
-add_library(server_lib server.cpp server.h)
-
-add_executable(server ${SOURCE_EXE} sample.h)
-
-target_link_libraries(server server_lib volume_handler command_handler media_commands_handler ${Boost_LIBRARIES})
-
-add_executable(client clientTest.cpp)
-
-target_link_libraries(client ${BOOST_LIBRARIES})
+add_subdirectory(src)

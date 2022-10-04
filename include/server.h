@@ -13,7 +13,6 @@
 
 using namespace boost::asio;
 using ip::tcp;
-using std::endl;
 
 class con_handler : public boost::enable_shared_from_this<con_handler>
 {
@@ -21,8 +20,8 @@ private:
     boost::system::error_code err = boost::system::error_code();;
     tcp::socket sock;
     std::string response;
-    enum { max_length = MESSAGE_MAX_LENGTH };
-    char receive_buffer[max_length];
+    enum { max_length = MESSAGE_MAX_LENGTH }; // Bad practice on defining consts!!
+    uint8_t receive_buffer[max_length];
     VolumeHandler* volume_handler;
     CommandHandler command_handler;
 public:
@@ -34,7 +33,7 @@ public:
     tcp::socket& socket();
 
     void start();
-
+private:
     void handle_read(const boost::system::error_code& err, size_t bytes_transferred);
     void handle_write(const boost::system::error_code& err);
 };
@@ -47,10 +46,9 @@ private:
     VolumeHandler* volume_handler = nullptr;
     void start_accept();
 public:
-    Server(boost::asio::io_service& io_service, std::string ip_v4);
-
-    void handle_accept(con_handler::pointer connection, const boost::system::error_code& err);
-
+    Server(boost::asio::io_service& io_service, std::string ip_v4); // TODO: Singleton?
     ~Server();
+private:
+    void handle_accept(con_handler::pointer connection, const boost::system::error_code& err);
 
 };

@@ -21,7 +21,7 @@ private:
     tcp::socket sock;
     std::string response;
     enum { max_length = MESSAGE_MAX_LENGTH }; // Bad practice on defining consts!!
-    uint8_t receive_buffer[max_length];
+    char receive_buffer[max_length];
     VolumeHandler* volume_handler;
     CommandHandler command_handler;
 public:

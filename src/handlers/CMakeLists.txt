@@ -1,6 +1,10 @@
-set(HANDLERS_LIB_SOURCES command_handler.cpp media_commands_handler.cpp volume_handler.cpp)
+cmake_minimum_required(VERSION 3.1.0)
 
-add_library(handlers SHARED ${HANDLERS_LIB_SOURCES})
+project(handlers LANGUAGES CXX)
+
+aux_source_directory(${CMAKE_CURRENT_LIST_DIR} SOURCES)
+
+add_library(handlers SHARED ${SOURCES})
 
 target_compile_definitions(handlers PUBLIC handlers)
 

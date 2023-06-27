@@ -49,7 +49,7 @@ void ConnectionHandler::_HandleRead(const boost::system::error_code& err, size_t
 {
     if (!err) 
     {
-        auto result = m_pCommandHandler->ExecuteCommand(receive_buffer, bytes_transferred);
+        auto result = m_pCommandHandler->ExecuteRawCommand(receive_buffer, bytes_transferred);
         response = result.What() + '\n';
         m_socket.async_write_some(
             boost::asio::buffer(response),

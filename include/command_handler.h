@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "volume_handler.h"
+#include "Command.h"
 
 #include <iostream>
 
@@ -17,7 +18,7 @@ public:
 	
 	using Ptr = boost::shared_ptr<CommandHandler>;
 
-	CommandHandler();
+
 	static CommandHandler::Ptr Create();
 
 	class Result 
@@ -33,8 +34,12 @@ public:
 		std::string response;
 		bool is_ok;
 	};
-	Result ExecuteCommand(char arr[], size_t message_length);
+
+	Result ExecuteRawCommand(char arr[], size_t message_length);
 private:
+	CommandHandler();
+
+	Result _ExecuteCommand(const Command& command);
 
 	VolumeHandler::Ptr m_pVolumeHandler;
 };

@@ -1,5 +1,6 @@
 #include "command_handler.h"
 #include "media_commands_handler.h"
+#include "Command.h"
 
 #include <boost/make_shared.hpp>
 
@@ -21,7 +22,7 @@ CommandHandler::CommandHandler()
 
 CommandHandler::Ptr CommandHandler::Create()
 {
-    return boost::make_shared<CommandHandler>();
+    return Ptr(new CommandHandler());
 }
 
 const std::string& CommandHandler::Result::What()
@@ -29,65 +30,89 @@ const std::string& CommandHandler::Result::What()
     return m_resultMessage;
 }
 
-CommandHandler::Result CommandHandler::ExecuteCommand(char raw_message[], size_t message_length) 
+CommandHandler::Result CommandHandler::ExecuteRawCommand(char raw_message[], size_t message_length) 
 {
-    typedef CommandHandler::Result ch_result_t;
-    float m_volumeLevel = this->m_pVolumeHandler->update_volume_value();
-    std::string command = "000";
-    for (size_t i = 0; i < COMMAND_LENGTH; i++) {
-        command[i] = raw_message[i];
-    }
-    
-    std::cout << "Command received: " << command << std::endl;
-    if (command == "vsu") {
-        m_volumeLevel = this->m_pVolumeHandler->volume_step_up();
-    }
-    else if (command == "vsd") {
-        m_volumeLevel = this->m_pVolumeHandler->volume_step_down();
-    }
-    else if (command == "vsm") {
-        m_volumeLevel = this->m_pVolumeHandler->mute();
-    }
-    else if (command == "vsl") {
-        try {
-            std::string new_sound_level_str;
-            for (size_t i = 3; i < COMMAND_LENGTH + SOUND_LEVEL_LENGTH  && std::isdigit(raw_message[i]); i++) {
-                new_sound_level_str += raw_message[i];
-            }
-            int new_sound_level_int = std::stoi(new_sound_level_str);
-            //std::clog << "New sound level to set: " << new_sound_level_int << std::endl;
-            m_volumeLevel = this->m_pVolumeHandler->set_volume(new_sound_level_int);
-        }
-        catch (std::exception error) {
-            return ch_result_t(error.what(),false);
-        }
+    constexpr static uint32_t minimumMessageLength = 3u;
+    constexpr static uint32_t minimumMessageLengthWithData = minimumMessageLength + sizeof(Command::data_t);
 
-    }
-    else if (command == "gvl") {
-    }
-    else if (command == "mpp") {
-        MediaCommandsHandler::play_pause_media();
-    }
-    else if (command == "mnx"){
-        MediaCommandsHandler::next_media();
-    }
-    else if (command == "mpr"){
-        MediaCommandsHandler::prev_media(); 
-    }
-    else{
-        
+    using ch_result_t = CommandHandler::Result ;
+
+    if (message_length < 3)
+    {
+        return ch_result_t{ "bad command", false };
     }
 
-    std::string m_muted = m_pVolumeHandler->m_muted ? "true" : "false";
+    auto command = Command{ *(uint8_t*)raw_message };
+
+    if (command.RequiresData())
+    {
+        if(message_length < minimumMessageLengthWithData)
+            return ch_result_t{ "This command requires data to execute", false };
+
+        command.SetData(*(Command::data_t*)(void*)(raw_message + minimumMessageLength));
+    }
+
+    return _ExecuteCommand(command);
+
+}
+
+CommandHandler::Result CommandHandler::_ExecuteCommand(const Command& command)
+{
+
+    // TODO::Invalid codes!
+    using ch_result_t = CommandHandler::Result;
+
     std::string m_resultMessage;
-    m_resultMessage += "t";
-    std::string volume_level_str = std::to_string((int)(m_volumeLevel * 100 + 0.5));
-    if (volume_level_str.size() < 3) {
-        volume_level_str = std::string(3 - volume_level_str.size(), '0') + volume_level_str;
+    try
+    {
+        switch (command.GetCode())
+        {
+        case Command::Code::VolumeStepUp:
+            m_pVolumeHandler->volume_step_up();
+            break;
+        case Command::Code::VolumeStepDown:
+            m_pVolumeHandler->volume_step_down();
+            break;
+        case Command::Code::VolumeSetMute:
+            m_pVolumeHandler->mute();
+            break;
+        case Command::Code::VolumeSetLevel:
+            m_pVolumeHandler->set_volume(command.GetData());
+            break;
+        case Command::Code::MediaPlayPause:
+            MediaCommandsHandler::play_pause_media();
+            break;
+        case Command::Code::MediaNext:
+            MediaCommandsHandler::next_media();
+            break;
+        case Command::Code::MediaPrev:
+            MediaCommandsHandler::prev_media();
+            break;
+            // We are executing this command by default
+        case Command::Code::VolumeGetLevel: [[fallthrough]]
+        case Command::Code::Unknown: [[fallthrough]]
+        default:
+            break;
+        }
+        const auto m_volumeLevel = m_pVolumeHandler->update_volume_value();
+    
+   
+ 
+        m_resultMessage += "t";
+        std::string volume_level_str = std::to_string((int)(m_volumeLevel * 100 + 0.5));
+
+        if (volume_level_str.size() < 3) 
+            volume_level_str = std::string(3 - volume_level_str.size(), '0') + volume_level_str;
+    
+        m_resultMessage += volume_level_str;
+        m_resultMessage += m_pVolumeHandler->IsMuted() ? 't' : 'f';
+
     }
-    m_resultMessage += volume_level_str;
-    m_resultMessage += m_muted[0];
-	return ch_result_t(m_resultMessage,true);
+    catch (const std::exception& e)
+    {
+        return ch_result_t(e.what(), false);
+    }
+    return ch_result_t(m_resultMessage, true);
 }
 
 CommandHandler::Result::operator bool() const

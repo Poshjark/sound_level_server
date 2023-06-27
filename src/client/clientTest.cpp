@@ -66,9 +66,9 @@ int main() {
 			std::cout << "Message is too large, it will be trimmed to max message size " << MESSAGE_MAX_LENGTH << " characters\n";
 			msg = msg.substr(0, MESSAGE_MAX_LENGTH);
 		}
-		while (msg.size() < 6) {
-			msg += ' ';
-		}
+		//while (msg.size() < 6) {
+		//	msg += ' ';
+		//}
 		send_message(msg);
 		
 		msg.clear();

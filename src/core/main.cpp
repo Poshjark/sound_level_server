@@ -25,7 +25,7 @@ VOID ReportSvcStatus(DWORD, DWORD, DWORD);
 VOID SvcInit(DWORD, LPTSTR*);
 VOID SvcReportEvent(LPTSTR);
 
-bool run_as_service = false;
+bool run_as_service = true;
 const std::regex ipv4("(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])");
 std::string SERVER_IP = DEFAULT_SERVER_IPv4;
 
@@ -85,7 +85,7 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
 
     if (!run_as_service) 
     {
-        main_executable_loop();
+        return main_executable_loop();
     }
 
     // TO_DO: Add any additional services for the process to this table.

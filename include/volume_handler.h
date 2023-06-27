@@ -13,34 +13,44 @@
 void exit_on_error(HRESULT);
 
 
-#define SAFE_RELEASE(pp)  \
-              if ((pp) != NULL)  \
-                { (pp)->Release(); (pp) = NULL; }
-
-class VolumeHandler {
 
 
-#ifdef DEBUG
+class VolumeHandler 
+{
 public:
-#endif
+	using Ptr = boost::shared_ptr<VolumeHandler>;
 
-	std::string name;
-	HRESULT hr = S_OK;
-	IMMDevice* audio_device;
-	IAudioEndpointVolume* endpoint_volume_interface;
-	GUID g_guidMyContext;
-	float volume_level;
-	const float& update_volume_value();
-	void get_name();
 public:
-	BOOL muted;
-	VolumeHandler();
+
+	bool IsMuted();
+
+	static VolumeHandler::Ptr Create();
+
+
+
 	const float& volume_step_up();
 	const float& volume_step_down();
 	const float& set_volume(int);
 	const float& mute();
 
 	~VolumeHandler();
+private:
+#ifdef DEBUG
+public:
+#endif
+	void get_name();
+	const float& update_volume_value();
 
+	VolumeHandler();
+
+	std::string name;
+	HRESULT hr = S_OK;
+	IMMDevice* audio_device;
+	IAudioEndpointVolume* endpoint_volume_interface;
+	GUID g_guidMyContext;
+	float m_volumeLevel;
+
+	// Winapi хочет именно BOOL
+	BOOL m_muted;
 
 };

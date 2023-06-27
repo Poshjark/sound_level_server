@@ -1,28 +1,37 @@
 #include "command_handler.h"
 #include "media_commands_handler.h"
 
+#include <boost/make_shared.hpp>
+
 #define MESSAGE_MAX_LENGTH 1024
 #define COMMAND_LENGTH 3
 #define SOUND_LEVEL_LENGTH 3
 
-CommandHandler::CommandHandlerResult::CommandHandlerResult(std::string message, bool _is_ok)
+CommandHandler::Result::Result(std::string message, bool _is_ok)
     :
-    result_message(message), is_ok(_is_ok)
+    m_resultMessage(message), is_ok(_is_ok)
 {
 }
 
-CommandHandler::CommandHandler(VolumeHandler* _volume_handler) : volume_handler(_volume_handler) {
-
-}
-
-const std::string& CommandHandler::CommandHandlerResult::what()
+CommandHandler::CommandHandler() 
+    : m_pVolumeHandler(VolumeHandler::Create()) 
 {
-    return this->result_message;
+
 }
 
-CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_message[], size_t message_length) {
-    typedef CommandHandler::CommandHandlerResult ch_result_t;
-    float volume_level = this->volume_handler->update_volume_value();
+CommandHandler::Ptr CommandHandler::Create()
+{
+    return boost::make_shared<CommandHandler>();
+}
+
+const std::string& CommandHandler::Result::What()
+{
+    return m_resultMessage;
+}
+
+CommandHandler::Result CommandHandler::ExecuteCommand(char raw_message[], size_t message_length) {
+    typedef CommandHandler::Result ch_result_t;
+    float m_volumeLevel = this->m_pVolumeHandler->update_volume_value();
     std::string command = "000";
     for (size_t i = 0; i < COMMAND_LENGTH; i++) {
         command[i] = raw_message[i];
@@ -30,13 +39,13 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
     
     std::cout << "Command received: " << command << std::endl;
     if (command == "vsu") {
-        volume_level = this->volume_handler->volume_step_up();
+        m_volumeLevel = this->m_pVolumeHandler->volume_step_up();
     }
     else if (command == "vsd") {
-        volume_level = this->volume_handler->volume_step_down();
+        m_volumeLevel = this->m_pVolumeHandler->volume_step_down();
     }
     else if (command == "vsm") {
-        volume_level = this->volume_handler->mute();
+        m_volumeLevel = this->m_pVolumeHandler->mute();
     }
     else if (command == "vsl") {
         try {
@@ -46,7 +55,7 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
             }
             int new_sound_level_int = std::stoi(new_sound_level_str);
             //std::clog << "New sound level to set: " << new_sound_level_int << std::endl;
-            volume_level = this->volume_handler->set_volume(new_sound_level_int);
+            m_volumeLevel = this->m_pVolumeHandler->set_volume(new_sound_level_int);
         }
         catch (std::exception error) {
             return ch_result_t(error.what(),false);
@@ -68,14 +77,19 @@ CommandHandler::CommandHandlerResult CommandHandler::execute_command(char raw_me
         
     }
 
-    std::string muted = this->volume_handler->muted ? "true" : "false";
-    std::string result_message;
-    result_message += "t";
-    std::string volume_level_str = std::to_string((int)(volume_level * 100 + 0.5));
+    std::string m_muted = m_pVolumeHandler->m_muted ? "true" : "false";
+    std::string m_resultMessage;
+    m_resultMessage += "t";
+    std::string volume_level_str = std::to_string((int)(m_volumeLevel * 100 + 0.5));
     if (volume_level_str.size() < 3) {
         volume_level_str = std::string(3 - volume_level_str.size(), '0') + volume_level_str;
     }
-    result_message += volume_level_str;
-    result_message += muted[0];
-	return ch_result_t(result_message,true);
+    m_resultMessage += volume_level_str;
+    m_resultMessage += m_muted[0];
+	return ch_result_t(m_resultMessage,true);
+}
+
+CommandHandler::Result::operator bool() const
+{
+    return is_ok; 
 }

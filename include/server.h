@@ -2,8 +2,12 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/noncopyable.hpp>
+
 #include "volume_handler.h"
 #include "command_handler.h"
+
+
 
 
 #define SERVER_PORT 3000
@@ -14,41 +18,49 @@
 using namespace boost::asio;
 using ip::tcp;
 
-class con_handler : public boost::enable_shared_from_this<con_handler>
+// TODO: Âûםוסעט ג מעהוכüםûי פאיכ
+class ConnectionHandler : public boost::enable_shared_from_this<ConnectionHandler>
 {
-private:
-    boost::system::error_code err = boost::system::error_code();;
-    tcp::socket sock;
-    std::string response;
-    enum { max_length = MESSAGE_MAX_LENGTH }; // Bad practice on defining consts!!
-    char receive_buffer[max_length];
-    VolumeHandler* volume_handler;
-    CommandHandler command_handler;
+    constexpr static uint32_t maxMessageLength = 1024u;
 public:
-    typedef boost::shared_ptr<con_handler> pointer;
-    con_handler(boost::asio::any_io_executor& io_service, VolumeHandler* volume_handler_input);
+    using Ptr = boost::shared_ptr<ConnectionHandler>;
 
-    static pointer create(boost::asio::any_io_executor& io_service, VolumeHandler* volume_handler);
-    //socket creation
-    tcp::socket& socket();
 
-    void start();
+    static Ptr Create(boost::asio::any_io_executor& io_service, CommandHandler::Ptr commandHandler);
+
+    tcp::socket& GetSocket();
+
+    void Start();
+
 private:
-    void handle_read(const boost::system::error_code& err, size_t bytes_transferred);
-    void handle_write(const boost::system::error_code& err);
+    ConnectionHandler(boost::asio::any_io_executor& io_service, CommandHandler::Ptr commandHandler);
+
+    void _HandleRead(const boost::system::error_code& err, size_t bytes_transferred);
+    void _HandleWrite(const boost::system::error_code& err);
+
+    boost::system::error_code err;
+    tcp::socket m_socket;
+    std::string response;
+
+    char receive_buffer[maxMessageLength];
+
+    CommandHandler::Ptr m_pCommandHandler;
+
 };
 
 
-class Server
+class Server : boost::noncopyable
 {
-private:
-    tcp::acceptor acceptor_;
-    VolumeHandler* volume_handler = nullptr;
-    void start_accept();
+
 public:
-    Server(boost::asio::io_service& io_service, std::string ip_v4); // TODO: Singleton?
+    Server(boost::asio::io_service& io_service, const std::string& ip_v4); // TODO: Singleton?
     ~Server();
+
 private:
-    void handle_accept(con_handler::pointer connection, const boost::system::error_code& err);
+    void _StartAccept();
+    void _HandleAccept(ConnectionHandler::Ptr connection, const boost::system::error_code& err);
+
+    tcp::acceptor m_acceptor;
+    CommandHandler::Ptr m_pCommandHandler;
 
 };

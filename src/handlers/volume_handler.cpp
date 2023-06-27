@@ -1,6 +1,14 @@
 #include "volume_handler.h"
 #include <iostream>
-void exit_on_error(HRESULT hr) {
+
+#include <boost/make_shared.hpp>
+
+#define SAFE_RELEASE(pp)  \
+              if ((pp) != NULL)  \
+                { (pp)->Release(); (pp) = NULL; }
+
+void exit_on_error(HRESULT hr) 
+{
 	if (hr != S_OK) {
 		CoUninitialize();
 		std::cerr << "Error in volumehandler " << hr << std::endl;
@@ -8,11 +16,18 @@ void exit_on_error(HRESULT hr) {
 	}
 }
 
-VolumeHandler::VolumeHandler() : audio_device(nullptr), endpoint_volume_interface(nullptr), g_guidMyContext(GUID_NULL) {
-#ifndef COM_ACTIVATED
+bool VolumeHandler::IsMuted()
+{
+	return m_muted;
+}
+
+VolumeHandler::VolumeHandler() 
+	: audio_device(nullptr)
+	, endpoint_volume_interface(nullptr)
+	, g_guidMyContext(GUID_NULL) 
+{
+
 	CoInitialize(NULL);
-#define COM_ACTIVATED
-#endif // !COM_ACTIVATED
 
 	// Getting device enumerator to get AudioEndpoint
 	IMMDeviceEnumerator* deviceEnumerator = nullptr;
@@ -37,20 +52,21 @@ VolumeHandler::VolumeHandler() : audio_device(nullptr), endpoint_volume_interfac
 	exit_on_error(hr);
 
 	// Just initiliazing/updating volume  with real value
-	hr = endpoint_volume_interface->GetMasterVolumeLevel(&volume_level);
+	hr = endpoint_volume_interface->GetMasterVolumeLevel(&m_volumeLevel);
 	exit_on_error(hr);
 
 	// Initiliazing mute state
-	hr = endpoint_volume_interface->GetMute(&muted);
+	hr = endpoint_volume_interface->GetMute(&m_muted);
 	exit_on_error(hr);
 }
 
 const float& VolumeHandler::update_volume_value()
 {
-	hr = endpoint_volume_interface->GetMasterVolumeLevelScalar(&volume_level);
+	hr = endpoint_volume_interface->GetMasterVolumeLevelScalar(&m_volumeLevel);
 	exit_on_error(hr);
-	return volume_level;
+	return m_volumeLevel;
 }
+
 const float& VolumeHandler::volume_step_up() {
 	hr = endpoint_volume_interface->VolumeStepUp(&g_guidMyContext);
 	exit_on_error(hr);
@@ -73,13 +89,11 @@ const float& VolumeHandler::set_volume(int val) {
 }
 
 const float& VolumeHandler::mute() {
-	muted = !muted;
-	hr = endpoint_volume_interface->SetMute(muted, &g_guidMyContext);
+	m_muted = !m_muted;
+	hr = endpoint_volume_interface->SetMute(m_muted, &g_guidMyContext);
 	exit_on_error(hr);
 	return update_volume_value();
 }
-
-
 
 
 void VolumeHandler::get_name()
@@ -116,4 +130,9 @@ VolumeHandler::~VolumeHandler()
 {
 	SAFE_RELEASE(audio_device);
 	SAFE_RELEASE(endpoint_volume_interface);
+}
+
+VolumeHandler::Ptr VolumeHandler::Create()
+{
+	return boost::make_shared<VolumeHandler>();
 }

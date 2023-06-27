@@ -13,18 +13,25 @@
 
 class CommandHandler {
 public:
-	VolumeHandler* volume_handler;
-	CommandHandler(VolumeHandler*);
-	class CommandHandlerResult {
+	
+	using Ptr = boost::shared_ptr<CommandHandler>;
+
+	static CommandHandler::Ptr Create();
+
+	class Result 
+	{
+
+	public:
+		Result(std::string message, bool _is_ok);
+		operator bool() const;
+		const std::string& What();
 	private:
-		std::string result_message;
+		std::string m_resultMessage;
 		std::string response;
 		bool is_ok;
-	public:
-		CommandHandlerResult(std::string message, bool _is_ok);
-		operator bool() const { return is_ok; };
-		const std::string& what();
 	};
-	CommandHandlerResult execute_command(char arr[], size_t message_length);
-
+	Result ExecuteCommand(char arr[], size_t message_length);
+private:
+	CommandHandler();
+	VolumeHandler::Ptr m_pVolumeHandler;
 };

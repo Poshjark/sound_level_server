@@ -1,7 +1,12 @@
-add_executable(soundlevelserver core/main.cpp)
+
 
 add_subdirectory(handlers)
+
 add_subdirectory(server)
+
 add_subdirectory(client)
+
+# time has not come yet
 #add_subdirectory(frame)
-target_link_libraries(soundlevelserver handlers serverlib ${Boost_LIBRARIES})
+add_subdirectory(core)
+

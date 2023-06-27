@@ -11,17 +11,20 @@
 #define COMMAND_LENGTH 3
 
 
-class CommandHandler {
+class CommandHandler 
+{
 public:
 	
 	using Ptr = boost::shared_ptr<CommandHandler>;
 
+	CommandHandler();
 	static CommandHandler::Ptr Create();
 
 	class Result 
 	{
 
 	public:
+
 		Result(std::string message, bool _is_ok);
 		operator bool() const;
 		const std::string& What();
@@ -32,6 +35,6 @@ public:
 	};
 	Result ExecuteCommand(char arr[], size_t message_length);
 private:
-	CommandHandler();
+
 	VolumeHandler::Ptr m_pVolumeHandler;
 };

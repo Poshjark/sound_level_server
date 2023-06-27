@@ -29,7 +29,8 @@ const std::string& CommandHandler::Result::What()
     return m_resultMessage;
 }
 
-CommandHandler::Result CommandHandler::ExecuteCommand(char raw_message[], size_t message_length) {
+CommandHandler::Result CommandHandler::ExecuteCommand(char raw_message[], size_t message_length) 
+{
     typedef CommandHandler::Result ch_result_t;
     float m_volumeLevel = this->m_pVolumeHandler->update_volume_value();
     std::string command = "000";

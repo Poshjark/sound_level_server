@@ -6,6 +6,8 @@
 #include <endpointvolume.h>
 #include <Windows.h>
 #include <stdio.h>
+#include <boost/shared_ptr.hpp>
+
 
 #define DEBUG
 

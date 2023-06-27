@@ -11,7 +11,7 @@
 
 #define SVCNAME TEXT("SvcName")
 #define ARGS_EXE_FLAG "-exe"
-#define DEFAULT_SERVER_IPv4 "192.168.0.102"
+#define DEFAULT_SERVER_IPv4 "0.0.0.0"
 
 SERVICE_STATUS          gSvcStatus;
 SERVICE_STATUS_HANDLE   gSvcStatusHandle;
@@ -34,7 +34,7 @@ int main_executable_loop()
 {
     try
     {
-        std::cout << "Server is now running on ip '" << SERVER_IP << "'\n" << std::endl;
+        std::cout << "Server is now running on ip '" << SERVER_IP << ":" << SERVER_PORT << "\n" << std::endl;
         boost::asio::io_service io_service;
         Server server(io_service, SERVER_IP);
         io_service.run();

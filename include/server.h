@@ -7,6 +7,7 @@
 #include "volume_handler.h"
 #include "command_handler.h"
 
+#include "ConnectionHandler.h"
 
 
 
@@ -18,38 +19,8 @@
 using namespace boost::asio;
 using ip::tcp;
 
-// TODO: Âûםוסעט ג מעהוכüםûי פאיכ
-class ConnectionHandler : public boost::enable_shared_from_this<ConnectionHandler>
-{
-    constexpr static uint32_t maxMessageLength = 1024u;
-public:
-    using Ptr = boost::shared_ptr<ConnectionHandler>;
 
-
-    static Ptr Create(boost::asio::any_io_executor& io_service, CommandHandler::Ptr commandHandler);
-
-    tcp::socket& GetSocket();
-
-    void Start();
-
-private:
-    ConnectionHandler(boost::asio::any_io_executor& io_service, CommandHandler::Ptr commandHandler);
-
-    void _HandleRead(const boost::system::error_code& err, size_t bytes_transferred);
-    void _HandleWrite(const boost::system::error_code& err);
-
-    boost::system::error_code err;
-    tcp::socket m_socket;
-    std::string response;
-
-    char receive_buffer[maxMessageLength];
-
-    CommandHandler::Ptr m_pCommandHandler;
-
-};
-
-
-class Server : boost::noncopyable
+class Server : boost::asio::detail::noncopyable
 {
 
 public:

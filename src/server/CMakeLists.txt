@@ -1,9 +1,15 @@
-add_library(serverlib SHARED server.cpp)
+cmake_minimum_required(VERSION 3.1.0)
 
-target_link_libraries(serverlib ${Boost_LIBRARIES} handlers)
+project(serverlib LANGUAGES CXX)
 
-target_compile_definitions(serverlib PUBLIC serverlib)
+aux_source_directory(${CMAKE_CURRENT_LIST_DIR} SOURCES)
 
-set_target_properties(serverlib PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
-set_target_properties(serverlib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} handlers)
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC ${PROJECT_NAME})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})

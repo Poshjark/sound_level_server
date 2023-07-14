@@ -4,7 +4,7 @@
 void Server::_StartAccept()
 {   
     // getting executor(ioservice) to bind async operations to
-    auto executor = m_acceptor.get_executor();
+    auto& executor = m_acceptor.get_executor();
     ConnectionHandler::Ptr connection = ConnectionHandler::Create(executor, m_pCommandHandler);
 
     // asynchronous accept operation and wait for a new connection.

@@ -1,12 +1,16 @@
 #pragma once
+
 #include <cstdint>
 #include <string>
+#include <array>
+#include <unordered_map>
 
 class Command
 {
 public:
 
 	using data_t = int32_t;
+	
 
 	enum class Code : uint8_t
 	{
@@ -20,6 +24,8 @@ public:
 		MediaPrev		=	0x07,
 		Unknown			=	0xAA
 	};
+
+	using serialized_t = std::array<uint8_t, sizeof(Code) + sizeof(data_t)>;
 
 	static Code CodeFromByte(const uint8_t& code)
 	{
@@ -81,7 +87,34 @@ public:
 	{
 		return m_code == Code::VolumeSetLevel;
 	}
+
+
+	serialized_t Serialize() const
+	{
+		serialized_t result;
+
+		result[0] = static_cast<uint8_t>(m_code);
+
+		*((uint8_t*)result.data() + sizeof(m_code)) = m_data;
+
+		return result;
+	}
+
 private:
 	Code		m_code;
 	data_t	m_data;
+};
+
+
+const std::unordered_map<uint8_t, std::string> commandDescriptions
+{
+	{(uint8_t)Command::Code::VolumeStepUp		, "Volume step up"},
+	{(uint8_t)Command::Code::VolumeStepDown		, "Volume step down"},
+	{(uint8_t)Command::Code::VolumeSetMute		, "Switch volume mute state(if muted - turns mute off and vice versa"},
+	{(uint8_t)Command::Code::VolumeSetLevel		, "Volume set level. Requires additional 4-byte unsigned integer of volume level 0 to 100 (percents)"},
+	{(uint8_t)Command::Code::VolumeGetLevel		, "Volume get level - returns current volume level"},
+	{(uint8_t)Command::Code::MediaPlayPause		, "Switch media play state. Play/pause"},
+	{(uint8_t)Command::Code::MediaNext			, "Play next media if it's availiable"},
+	{(uint8_t)Command::Code::MediaPrev			, "Play previous media if it's availiable"}
+
 };

@@ -4,9 +4,24 @@
 
 #include <boost/make_shared.hpp>
 
-#define MESSAGE_MAX_LENGTH 1024
-#define COMMAND_LENGTH 3
-#define SOUND_LEVEL_LENGTH 3
+
+
+static const std::string& GetHelpMessage()
+{
+    static const std::string helpMessage = 
+        "Command must contain at least 1 byte - command code\n"\
+        "0x00 - Volume step up\n"
+        "0x01 - Volume step down\n"
+        "0x02 - Switch volume mute state(if muted - turns mute off and vice versa\n"
+        "0x03 - Volume set level. Requires additional 4-byte unsigned integer of volume level 0 to 100 (percents)\n"
+        "0x04 - Volume get level - returns current volume level\n"
+        "0x05 - Switch media play state. Play/pause\n"
+        "0x06 - Play next media if it's availiable\n"
+        "0x07 - Play previous media if it's availiable\n";
+
+    return helpMessage;
+}
+
 
 CommandHandler::Result::Result(std::string message, bool _is_ok)
     :
@@ -32,17 +47,32 @@ const std::string& CommandHandler::Result::What()
 
 CommandHandler::Result CommandHandler::ExecuteRawCommand(char raw_message[], size_t message_length) 
 {
-    constexpr static uint32_t minimumMessageLength = 3u;
+    // mimimum message length is length of command code - one byte
+    constexpr static uint32_t minimumMessageLength = 1u;
+
+    // for messages with data min length advances by data length (4 bytes) and equals 1 + 4 = 5 bytes
     constexpr static uint32_t minimumMessageLengthWithData = minimumMessageLength + sizeof(Command::data_t);
 
     using ch_result_t = CommandHandler::Result ;
 
-    if (message_length < 3)
-    {
+    if (message_length < 1)
         return ch_result_t{ "bad command", false };
+    
+    std::cout << "Command received:\t";
+
+    if (message_length >= 4 && std::string(raw_message, 4) == "help")
+    {
+        std::cout << "Help\n";
+        return ch_result_t{ GetHelpMessage(), true };
     }
+        
+  
+
 
     auto command = Command{ *(uint8_t*)raw_message };
+
+    // Какой-то костыль
+    std::cout << commandDescriptions.at((uint8_t)command.GetCode()) << std::endl;
 
     if (command.RequiresData())
     {

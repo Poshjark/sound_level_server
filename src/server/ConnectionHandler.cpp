@@ -22,13 +22,17 @@ tcp::socket& ConnectionHandler::GetSocket()
 
 void ConnectionHandler::Start()
 {
-    m_socket.async_read_some(
+    m_socket.async_read_some
+    (
         boost::asio::buffer(receive_buffer, maxMessageLength),
-        boost::bind(&ConnectionHandler::_HandleRead,
-            shared_from_this(),
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred
-            ));
+        boost::bind
+            (
+                &ConnectionHandler::_HandleRead,
+                shared_from_this(),
+                boost::asio::placeholders::error,
+                boost::asio::placeholders::bytes_transferred
+            )
+    );
 }
 
 
@@ -50,7 +54,7 @@ void ConnectionHandler::_HandleRead(const boost::system::error_code& err, size_t
     if (!err) 
     {
         auto result = m_pCommandHandler->ExecuteRawCommand(receive_buffer, bytes_transferred);
-        response = result.What() + '\n';
+        response = result.What();
         m_socket.async_write_some(
             boost::asio::buffer(response),
             boost::bind(&ConnectionHandler::_HandleWrite,

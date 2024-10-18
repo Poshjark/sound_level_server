@@ -1,10 +1,12 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.20)
 
-project(sound_level_server LANGUAGES CXX)
+cmake_policy(SET CMP0074 NEW)
 
-find_package(Boost 1.78.0)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+include_directories( BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/inc" )
+
+project(sound_level_server)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_LIST_DIR}/bin)
 
@@ -12,6 +14,6 @@ set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib)
 
 set(PROJECT_BINARY_DIR ${CMAKE_CURRENT_LIST_DIR}/bin)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+find_package(Boost COMPONENTS thread)
 
 add_subdirectory(src)
